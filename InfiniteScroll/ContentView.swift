@@ -21,9 +21,45 @@ struct Home: View {
     @ObservedObject var listData = getData()
     var body: some View {
         List(0..<listData.data.count, id: \.self) { i in
-            Text(self.listData.data[i].id)
+            if i == self.listData.data.count - 1 {
+                cellView(data: self.listData.data[i], isLast: true, listData: self.listData)
+            } else {
+                cellView(data: self.listData.data[i], isLast: false, listData: self.listData)
+            }
+
         }
     }
+}
+
+struct cellView: View {
+    
+    var data: Doc
+    var isLast: Bool
+    @ObservedObject var listData: getData
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(data.id).fontWeight(.bold)
+            Text(data.eissn)
+            Text(data.article_type)
+            
+            if self.isLast {
+                Text(data.publication_date).font(.caption)
+                    .onAppear {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            if self.listData.data.count != 50 {
+                                self.listData.updateData()
+                            }
+                        }
+                    }
+            } else {
+                Text(data.publication_date)
+            }
+            
+        }
+        .padding(.top, 10)
+    }
+    
 }
 
 class getData: ObservableObject {
@@ -51,6 +87,7 @@ class getData: ObservableObject {
                 let oldData = self.data
                 DispatchQueue.main.async {
                     self.data = oldData + json.response.docs
+                    self.count += 10
                 }
             } catch {
                 print(error.localizedDescription)
